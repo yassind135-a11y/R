@@ -1,0 +1,9 @@
+{
+  "name": "apology-garden",
+  "private": true,
+  "version": "1.0.0",
+  "description": "حديقة الاعتذار — موقع صفحة واحدة Vanilla HTML/CSS/JS",
+  "scripts": {
+    "dev": "node server.js"
+  }
+}

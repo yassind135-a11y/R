@@ -1,0 +1,436 @@
+/* ════════════════════════════════════════════════════════════════
+   حديقة الاعتذار — الثيم الليلي (نسخة الأحمر)
+   الألوان: خلفية كحلية غامقة، أحمر وردي متوهج #e5383b،
+   أبيض وردي ناعم #f9e8ea — لا أصفر في المشروع إطلاقًا
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── متغيرات الألوان (عدّل من هنا فقط إن أردت تغيير الثيم) ───── */
+:root {
+  --bg-deep: #05050a;
+  --bg-mid: #0d0d15;
+  --red: #e5383b;              /* الأحمر الأساسي */
+  --red-glow: rgba(229, 56, 59, .55);
+  --rose-white: #f9e8ea;       /* الأبيض الوردي الناعم */
+  --rose-glow: rgba(249, 232, 234, .5);
+  --text: #ece4e6;
+  --green: #7fae7a;
+}
+
+/* ── أساسيات ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
+  font-weight: 300;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 55%, #0a0810 100%);
+  min-height: 100vh;
+  overflow-x: hidden;           /* لا overflow أفقي على الشاشات الصغيرة */
+  line-height: 2;
+}
+
+/* لون التحديد بنفس روح الثيم */
+::selection {
+  background: rgba(229, 56, 59, .35);
+  color: #fff;
+}
+
+/* توهج خفيف في أطراف الشاشة (vignette) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .45) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ── قمر السماء (هلال ثابت) ──────────────────────────────────── */
+.moon {
+  position: fixed;
+  top: 7vh;
+  inset-inline-start: 11vw;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  /* خدعة الهلال: ظل داخلي مزاح يرسم الشكل */
+  box-shadow: inset -15px 7px 0 0 var(--rose-white);
+  filter: drop-shadow(0 0 16px rgba(249, 232, 234, .35));
+  opacity: .85;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── سماء النجوم (ثابتة خلف المحتوى) ─────────────────────────── */
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--rose-white);
+  opacity: .25;
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  from { opacity: .08; }
+  to   { opacity: .55; }
+}
+
+/* ── هيكل المراحل ────────────────────────────────────────────── */
+.stage {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12vh 5vw 0;
+}
+
+/* نص المرحلة: fade-in + انزلاق خفيف للأعلى */
+.stage-text {
+  max-width: 640px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 1.1s cubic-bezier(.22, .61, .36, 1) .15s,
+    transform 1.1s cubic-bezier(.22, .61, .36, 1) .15s;
+}
+
+.stage.active .stage-text {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stage-text p {
+  font-size: clamp(1.15rem, 2.6vw, 1.6rem);
+  letter-spacing: .2px;
+  text-shadow: 0 0 22px rgba(229, 56, 59, .2);
+}
+
+/* مشهد الحديقة أسفل كل مرحلة */
+.scene {
+  margin-top: auto;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.scene-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── ألوان العناصر ──────────────────────────────────────────── */
+.c-ground-dry { color: #171218; }   /* أرض جافة داكنة بلون وردي خافت */
+.c-ground     { color: #120f18; }
+.c-wilted     { color: #4a4450; }   /* نبات ذابل رمادي */
+.c-green      { color: var(--green); }
+.lit          { color: var(--red); }        /* أحمر متوهج */
+.lit-w        { color: var(--rose-white); } /* أبيض وردي متوهج */
+
+/* ── أنيميشن النمو ───────────────────────────────────────────── */
+/* العنصر ينبت من الأرض: scale من 0 إلى 1 مع ظهور تدريجي */
+.grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scale(0);
+  opacity: 0;
+  transition:
+    transform 1s cubic-bezier(.34, 1.3, .5, 1),
+    opacity .9s ease,
+    filter 1.4s ease;
+}
+
+.stage.active .grow {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* توهج يتصاعد تدريجيًا للعناصر الحمراء والوردية */
+.grow.lit   { filter: drop-shadow(0 0 0 rgba(229, 56, 59, 0)); }
+.grow.lit-w { filter: drop-shadow(0 0 0 rgba(249, 232, 234, 0)); }
+
+.stage.active .grow.lit {
+  filter: drop-shadow(0 0 10px var(--red-glow))
+          drop-shadow(0 0 28px rgba(229, 56, 59, .22));
+}
+
+.stage.active .grow.lit-w {
+  filter: drop-shadow(0 0 10px var(--rose-glow))
+          drop-shadow(0 0 26px rgba(249, 232, 234, .2));
+}
+
+/* تتابع النمو: ~150ms بين كل عنصر والذي يليه (staggered) */
+.garden-items > .sway:nth-child(1)  .grow { transition-delay: .05s; }
+.garden-items > .sway:nth-child(2)  .grow { transition-delay: .2s; }
+.garden-items > .sway:nth-child(3)  .grow { transition-delay: .35s; }
+.garden-items > .sway:nth-child(4)  .grow { transition-delay: .5s; }
+.garden-items > .sway:nth-child(5)  .grow { transition-delay: .65s; }
+.garden-items > .sway:nth-child(6)  .grow { transition-delay: .8s; }
+.garden-items > .sway:nth-child(7)  .grow { transition-delay: .95s; }
+.garden-items > .sway:nth-child(8)  .grow { transition-delay: 1.1s; }
+.garden-items > .sway:nth-child(9)  .grow { transition-delay: 1.25s; }
+.garden-items > .sway:nth-child(10) .grow { transition-delay: 1.4s; }
+.garden-items > .sway:nth-child(11) .grow { transition-delay: 1.55s; }
+.garden-items > .sway:nth-child(12) .grow { transition-delay: 1.7s; }
+
+/* تأرجح ناعم جدًا بعد النمو — على الغلاف الخارجي حتى لا يتعارض مع النمو */
+.sway {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sway 6s ease-in-out infinite alternate;
+}
+
+.sway:nth-child(even) { animation-duration: 7.2s; }
+.sway:nth-child(odd)  { animation-duration: 5.6s; }
+
+@keyframes sway {
+  from { transform: rotate(-1.4deg); }
+  to   { transform: rotate(1.4deg); }
+}
+
+/* تشققات الأرض تظهر ببطء */
+.cracks {
+  opacity: 0;
+  transition: opacity 1.4s ease .35s;
+}
+
+.stage.active .cracks { opacity: .9; }
+
+/* ── تلميح النزول (المرحلة الأولى) ───────────────────────────── */
+.scroll-hint {
+  position: absolute;
+  bottom: 4vh;
+  inset-inline-start: 50%;
+  transform: translateX(50%);   /* RTL: الإزاحة نحو اليمين */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: .9rem;
+  color: rgba(236, 228, 230, .55);
+  transition: opacity .8s ease;
+}
+
+.scroll-hint .chevron {
+  font-size: 1.4rem;
+  color: var(--red);
+  animation: hint-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes hint-bounce {
+  0%, 100% { transform: translateY(0); opacity: .5; }
+  50%      { transform: translateY(7px); opacity: 1; }
+}
+
+body.scrolled .scroll-hint {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── الجزيئات المتطايرة (المرحلة 5) ──────────────────────────── */
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: rise linear infinite;
+}
+
+.particle.rose {
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(229, 56, 59, .8);
+}
+
+.particle.white {
+  background: var(--rose-white);
+  box-shadow: 0 0 8px rgba(249, 232, 234, .8);
+}
+
+@keyframes rise {
+  0%   { transform: translateY(0); opacity: 0; }
+  12%  { opacity: .9; }
+  100% { transform: translateY(-72vh); opacity: 0; }
+}
+
+/* ── المرحلة الأخيرة: الباقة + الرسالة ───────────────────────── */
+.finale {
+  justify-content: center;
+  gap: 4vh;
+  padding-bottom: 12vh;
+}
+
+/* ظهور ناعم جدًا — أطول من باقي المراحل (~1.5s) */
+.finale .bouquet-frame,
+.finale #final-message,
+.finale .heart {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 1.6s ease .2s, transform 1.6s ease .2s;
+}
+
+.finale #final-message { transition-delay: .7s; }
+
+.finale.active .bouquet-frame,
+.finale.active #final-message,
+.finale.active .heart {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* إطار الباقة: حدّان أحمران رفيعان + ظل ناعم */
+.bouquet-frame {
+  position: relative;
+  border: 1px solid rgba(229, 56, 59, .55);
+  outline: 1px solid rgba(229, 56, 59, .22);
+  outline-offset: 6px;
+  border-radius: 18px;
+  padding: 10px;
+  background: rgba(13, 13, 21, .6);
+  box-shadow: 0 0 42px rgba(229, 56, 59, .18);
+}
+
+.bouquet-frame img {
+  display: block;
+  width: min(72vw, 380px);
+  height: auto;
+  border-radius: 12px;
+}
+
+#final-message {
+  max-width: 620px;
+  text-align: center;
+  white-space: pre-line; /* يحافظ على الفقرات والأسطر الفارغة في الرسالة الطويلة */
+  font-size: clamp(1.25rem, 3vw, 1.85rem);
+  font-weight: 600;
+  color: var(--rose-white);
+  line-height: 2.1;
+  text-shadow: 0 0 26px rgba(229, 56, 59, .32);
+}
+
+/* قلوب صغيرة تطفو حول الباقة في الختام */
+.heart {
+  position: absolute;
+  color: var(--red);
+  text-shadow: 0 0 14px var(--red-glow);
+  pointer-events: none;
+}
+
+.heart-1 { top: 16%; inset-inline-start: 22%; font-size: 1.3rem; transition-delay: 1s !important; }
+.heart-2 { top: 26%; inset-inline-end: 20%;  font-size: 1.7rem; transition-delay: 1.25s !important; }
+.heart-3 { top: 12%; inset-inline-end: 34%;  font-size: 1rem;   transition-delay: 1.5s !important; }
+
+/* بعد ظهورها: طفو ناعم مستمر */
+.finale.active .heart {
+  animation: heart-float 4.5s ease-in-out 1.8s infinite alternate;
+}
+
+.finale.active .heart-2 { animation-duration: 5.4s; }
+.finale.active .heart-3 { animation-duration: 3.8s; }
+
+@keyframes heart-float {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-14px); }
+}
+
+/* ── زر الموسيقى ─────────────────────────────────────────────── */
+.music-toggle {
+  position: fixed;
+  top: 18px;
+  inset-inline-end: 18px;   /* RTL: يظهر في أقصى اليسار */
+  z-index: 20;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(229, 56, 59, .45);
+  background: rgba(13, 13, 21, .75);
+  color: var(--red);
+  font-size: 1.15rem;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: box-shadow .6s ease, transform .3s ease, opacity .6s ease;
+}
+
+.music-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 18px rgba(229, 56, 59, .4);
+}
+
+/* نبض خفيف أثناء التشغيل */
+.music-toggle.playing {
+  animation: music-pulse 2.4s ease-in-out infinite;
+  box-shadow: 0 0 16px rgba(229, 56, 59, .45);
+}
+
+@keyframes music-pulse {
+  0%, 100% { box-shadow: 0 0 8px  rgba(229, 56, 59, .28); }
+  50%      { box-shadow: 0 0 20px rgba(229, 56, 59, .6); }
+}
+
+/* حالة عدم توفر الملف الصوتي */
+.music-toggle.no-audio {
+  opacity: .45;
+}
+
+/* ── احترام prefers-reduced-motion ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .sway,
+  .star,
+  .scroll-hint .chevron,
+  .music-toggle.playing,
+  .particle,
+  .finale.active .heart {
+    animation: none !important;
+  }
+
+  .stage-text,
+  .grow,
+  .cracks,
+  .finale .bouquet-frame,
+  .finale #final-message,
+  .finale .heart {
+    transition-duration: .3s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* ── شاشات صغيرة جدًا ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .stage { padding-inline: 6vw; }
+  .scroll-hint { font-size: .8rem; }
+  .moon { width: 44px; height: 44px; top: 9vh; }
+}
